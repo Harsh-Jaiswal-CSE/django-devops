@@ -17,7 +17,7 @@ spec:
       containers:
       - name: celery
         image: asia-south1-docker.pkg.dev/devopsdjango/django-repo/django-app:latest
-        command: ["celery", "-A", "tutorials", "worker", "-l", "info"]
+        command: ["celery", "-A", "tutorials.celery", "worker", "-l", "info"]
         env:
         - name: DB_NAME
           value: "main_db"                                  # ✅ terraform output
@@ -50,3 +50,4 @@ spec:
       - name: gcp-key
         secret:
           secretName: gcp-sa-key
+
