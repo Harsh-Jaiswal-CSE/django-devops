@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-app
+  namespace: app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: django-app
+  template:
+    metadata:
+      labels:
+        app: django-app
+    spec:
+      serviceAccountName: django-sa
+      containers:
+      - name: django
+        image: asia-south1-docker.pkg.dev/devopsdjango/django-repo/django-app:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DB_NAME
+          value: "main_db"                                  # ✅ from terraform output
+        - name: DB_USER
+          value: "django_user"                              # ✅ from terraform output
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: password
+        - name: DB_HOST
+          value: "devopsdjango:asia-south1:postgres-instance"  # ✅ terraform output: db_instance_connection_name
+        - name: DB_PORT
+          value: "5432"
+        - name: REDIS_HOST
+          value: "10.249.52.84"                             # ✅ terraform output: redis_host
+        - name: REDIS_PORT
+          value: "6379"
+        - name: GCS_BUCKET
+          value: "devopsdjango-django-bucket"               # ✅ terraform output: bucket_name
+        - name: GOOGLE_CLOUD_PROJECT
+          value: "devopsdjango"
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: "/var/secrets/google/key.json"
+        volumeMounts:
+        - name: gcp-key
+          mountPath: /var/secrets/google
+          readOnly: true
+      volumes:
+      - name: gcp-key
+        secret:
+          secretName: gcp-sa-key
